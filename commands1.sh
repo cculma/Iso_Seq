@@ -34,3 +34,28 @@ GENOME=/home/hawkins/Documents/Cesar/NGSEP/ngsep_tutorial/ZhongmuNo1/ZhongmuNo.1
 FM=/home/hawkins/Documents/Cesar/NGSEP/ngsep_tutorial/ZhongmuNo1/ZhongmuNo.1_genome_indexer.fasta
 STR=/home/hawkins/Documents/Cesar/NGSEP/ngsep_tutorial/ZhongmuNo1/ZhongmuNo.1_genome_strs.list
 java -Xmx280000m -jar ${NGSEP} ReadsAligner -i ${p}.fastq.gz -i2 -o ${p}.bam -r ${GENOME} -d ${FM} -s ${s} -p ILLUMINA -knownSTRs ${STR} -t 40 >& ${p}_ReadsAligner.log
+
+# Salmon
+# get fasta file from bed 
+fasta=/home/hawkins/Documents/Cesar/NGSEP/ngsep_tutorial/ZhongmuNo1/ZhongmuNo.1_genome.fasta
+bed=/home/hawkins/Documents/Cesar/RNA/globus/lordec_reports/lordec_trim/bed_Shen/ORF_NMD/blast_corrected_shen.bed
+bedtools getfasta -name -split -s -fi ${fasta} -bed ${bed} -fo blast_corrected_shen.fasta
+
+mkdir salmon_index
+mv blast_corrected_shen.fasta /home/hawkins/Documents/Cesar/NGSEP/ngsep_tutorial/ZhongmuNo1/salmon_index
+
+cd salmon_index
+pwd /home/hawkins/Documents/Cesar/RNA/globus/lordec_reports/lordec_trim/bed_Shen/ORF_NMD/salmon_index
+
+salmon=/home/hawkins/Documents/Cesar/RNA/Iso_assay/salmon-1.7.0_linux_x86_64/bin/salmon
+$salmon --version
+
+grep "^>" ZhongmuNo.1_genome.fasta | cut -d " " -f 1 > decoys.txt
+sed -i.bak -e 's/>//g' decoys.txt
+cat blast_corrected_shen.fasta ZhongmuNo.1_genome.fasta > gentrome.fa.gz
+$salmon index -t gentrome.fa.gz -d decoys.txt -p 12 -i salmon_index --gencode
+
+salmon_index=/home/hawkins/Documents/Cesar/NGSEP/ngsep_tutorial/ZhongmuNo1/salmon_index/salmon_index/
+$salmon quant -i $salmon_index -l A -1 ${p}_R1_001.fastq.gz -2 ${p}_R2_001.fastq.gz --validateMappings -o salmon_shen_${p}
+
+

@@ -1,12 +1,13 @@
 # tximport salmon TMP using ZhongmuNo1
 rm(list = ls())
+install.packages("flashClust")
+BiocManager::install(c("tximport", "DESeq2", "edgeR"))
 
 library(WGCNA)
 library(tximport)
 library(edgeR)
 library(DESeq2)
 library(flashClust)
-library(csaw)
 library(tidyr)
 library(tidyverse)
 library(data.table)

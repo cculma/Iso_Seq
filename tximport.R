@@ -142,6 +142,10 @@ dds <- dds[keep,]
 # Differential expression analysis
 dds <- DESeq(dds)
 res <- results(dds)
+summary(res)
+
+# save.image("~/Documents/Cesar/RNA/globus/lordec_reports/rna_seq/rna_seq_fastq/shen_sf/tximport.RData")
+
 dds.1 <- varianceStabilizingTransformation(dds, blind = TRUE, fitType = "parametric")
 dds.1@assays
 resultsNames(dds)

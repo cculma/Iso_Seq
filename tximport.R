@@ -1,13 +1,12 @@
 # tximport salmon TMP using ZhongmuNo1
 rm(list = ls())
-install.packages("flashClust")
-BiocManager::install(c("tximport", "DESeq2", "edgeR"))
 
 library(WGCNA)
 library(tximport)
 library(edgeR)
 library(DESeq2)
 library(flashClust)
+library(csaw)
 library(tidyr)
 library(tidyverse)
 library(data.table)
@@ -27,13 +26,23 @@ list_3 <- c('PI467895-CK-Stem','Saranac-DS-Stem','Saranac-SS-Leaf','PI467895-CK-
             'Saranac-SS-Stem','Wilson-DS-Root','Wilson-CK-Leaf','Wilson-CK-Stem',
             'Wilson-CK-Root')
 
-#################
+list_4 <- c('Saranac-DS-Leaf','Saranac-DS-Stem','Saranac-DS-Root',
+            'Saranac-CK-Leaf','Saranac-CK-Stem','Saranac-CK-Root',
+            'Wilson-DS-Leaf','Wilson-DS-Stem','Wilson-DS-Root',
+            'Wilson-CK-Leaf','Wilson-CK-Stem','Wilson-CK-Root')
 
-setwd("~/Documents/Cesar/RNA/globus/lordec_reports/rna_seq/salmon_sf")
+#################
+setwd("/home/hawkins/Documents/Cesar/RNA/globus/lordec_reports/rna_seq/rna_seq_fastq/shen_sf")
 data_rna_seq1 = list.files(pattern = "quant.sf", full.names = T)
+data_rna_seq2 <- c("./LID50570_1005_quant.sf", "./LID50570_1005_quant.sf", "./LID50570_1008_quant.sf",
+                   "./LID50570_1012_quant.sf", "./LID50571_1019_quant.sf", "./LID50571_1018_quant.sf",
+                   "./LID50571_1023_quant.sf", "./LID50572_1001_quant.sf", "./LID50574_1008_quant.sf",
+                   "./LID50574_1012_quant.sf", "./LID50574_1018_quant.sf", "./LID50575_1019_quant.sf")
 
 txi.1 <- tximport(data_rna_seq1, type="salmon", txOut=TRUE, countsFromAbundance="scaledTPM")
-cts <- txi.1$counts
+txi.2 <- tximport(data_rna_seq2, type="salmon", txOut=TRUE, countsFromAbundance="scaledTPM")
+cts <- txi.2$counts
+cts[1:5,1:5]
 normMat <- txi.1$length
 normMat <- normMat/exp(rowMeans(log(normMat)))
 normCts <- cts/normMat
@@ -57,23 +66,34 @@ se$totals <- y$samples$lib.size
 cpms <- calculateCPM(se, use.offsets = TRUE, log = FALSE)
 dim(cpms)
 cpms[1:5,1:5]
-colnames(cpms) <- list_2
+colnames(cpms) <- list_3
 thres <- cpms > 0.5
 keep <- rowSums(thres) >= 2 
+
 
 
 cpms.2 <- as.data.frame(cpms)
 cpms.2 <- tibble::rownames_to_column(cpms.2, "lid")
 cpms.2[1:5,1:5]
-cpms.3 <- separate(cpms.2, 1, c('gene_id', 'isoform'), sep = ";", remove = TRUE, convert = FALSE, extra = "warn")
+cpms.3 <- separate(cpms.2, 1, c('gene_id', 'rest'), sep = ";", remove = TRUE, convert = FALSE, extra = "warn")
 cpms.3[1:5,1:5]
-cpms.3 <- cpms.3[,-1]
+cpms.3 <- cpms.3[,-2]
 head(cpms.3)
+cpms.3.1 <- cpms.3 %>% remove_rownames() %>% column_to_rownames(var = 'gene_id')
+cpms.3.1[1:5,1:5]
+colnames(cpms.3.1)
+
+cpms.4 <- cpms.3.1[,c(2,7:13, 18:21)]
+colnames(cpms.4)
+cpms.4 <- cpms.4[,c(2,1,3,4,6,5,7:12)]
+cpms.4[1:5,1:5]
+dim(cpms.4)
+
 
 tf_expr <- inner_join(cpms.3, all_sqanti_3, by = "isoform")
 
-cpms.3.1 <- cpms.3 %>% remove_rownames() %>% column_to_rownames(var = 'isoform')
-cpms.3.1[1:5,1:5]
+
+
 write.table(cpms.3, '~/Documents/Cesar/RNA/globus/lordec_reports/wgcna/cpms.3.tsv', sep="\t", quote = FALSE, col.names = T, row.names = F)
 cpms.1 <- t(cpms.3.1)
 cpms.1[1:5,1:5]
@@ -101,24 +121,27 @@ data_rna_seq1 = list.files(pattern = "quant.sf", full.names = T)
 txi.1 <- tximport(data_rna_seq1, type="salmon", txOut=TRUE,
                   countsFromAbundance="scaledTPM")
 txi.1$counts
-?DESeqDataSetFromTximport
 
 #all samples
-samples <- read.csv('~/Documents/Cesar/RNA/globus/lordec_reports/wgcna/sample_metadata1.csv')
+samples <- read.csv('~/Documents/Cesar/RNA/globus/lordec_reports/wgcna/sample_metadata2.csv')
 samples1 <- samples %>% remove_rownames() %>% column_to_rownames(var = 'sample_id')
 head(samples1)
-head(datTraits)
-datTraits1 <- datTraits[,-c(1:9)]
-head(datTraits1)
+# head(datTraits)
+# datTraits1 <- datTraits[,-c(1:9)]
+# head(datTraits1)
+str(samples1)
+list_4 <- colnames(samples1)
+samples1[,list_4] <- lapply(samples1[,list_4], factor)
 
-dds <- DESeqDataSetFromTximport(txi.1, samples1, ~ variety + tissue + condition)
+dds <- DESeqDataSetFromTximport(txi.2, samples1, ~ variety + condition)
 
+#pre-filtering
 keep <- rowSums(counts(dds)) >= 10
 dds <- dds[keep,]
 
+# Differential expression analysis
 dds <- DESeq(dds)
-
-?varianceStabilizingTransformation
+res <- results(dds)
 dds.1 <- varianceStabilizingTransformation(dds, blind = TRUE, fitType = "parametric")
 dds.1@assays
 resultsNames(dds)

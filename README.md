@@ -22,7 +22,7 @@ transc4 has 9052682 lines  </br>
 This script make a quality control check similar to trimmomatic
 
 2_salmon_quant.sh </br>
-This script will aling and quantify your fastq files to obtain a file with tpm in quant.sf
+This script will align and quantify your fastq files to obtain a file with tpm in quant.sf
 
 3_mv_salmon.sh </br>
 This script moves all quant.sf files in a new directory to import them with tximport R package

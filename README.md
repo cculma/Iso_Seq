@@ -18,14 +18,14 @@ transc4 has 9052682 lines  </br>
 
 ## Run the scripts in the order
 
-1_fastp.sh
+1_fastp.sh </br>
 This script make a quality control check similar to trimmomatic
 
-2_salmon_quant.sh
+2_salmon_quant.sh </br>
 This script will aling and quantify your fastq files to obtain a file with tpm in quant.sf
 
-3_mv_salmon.sh
+3_mv_salmon.sh </br>
 This script moves all quant.sf files in a new directory to import them with tximport R package
 
-tximport.R
+tximport.R </br>
 This is the R script to import all quant.sf files. There are (at least) two options to identify DEG: Deseq2 and edgeR

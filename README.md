@@ -16,7 +16,7 @@ transc2 has 996554 lines </br>
 transc3 has 12970020 lines </br>
 transc4 has 9052682 lines  </br>
 
-Run the scripts in the order
+## Run the scripts in the order
 
 1_fastp.sh
 This script make a quality control check similar to trimmomatic
@@ -28,3 +28,4 @@ This script will aling and quantify your fastq files to obtain a file with tpm i
 This script moves all quant.sf files in a new directory to import them with tximport R package
 
 tximport.R
+This is the R script to import all quant.sf files. There are (at least) two options to identify DEG: Deseq2 and edgeR
